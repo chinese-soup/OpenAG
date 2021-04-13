@@ -574,6 +574,7 @@ void CHud :: Init( void )
 	m_Timer.Init();
 	m_Vote.Init();
 	m_Watermark.Init();
+	m_NameTags.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
