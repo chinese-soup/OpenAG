@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2001, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -152,7 +152,7 @@ public:
 
 
 public:
-
+	vec3_t		m_vPlayerPos[MAX_PLAYERS];
 	enum			{MAX_VOICE_SPEAKERS=7};
 
 	float			m_LastUpdateServerState;		// Last time we called this function.
@@ -175,6 +175,10 @@ public:
 	cl_entity_s		m_VoiceHeadModels[VOICE_MAX_PLAYERS];			// These aren't necessarily in the order of players. They are just
 																	// a place for it to put data in during CreateEntities.
 
+
+	cl_entity_s		m_VoiceHeadModels2[VOICE_MAX_PLAYERS];			// These aren't necessarily in the order of players. They are just
+																	// a place for it to put data in during CreateEntities.
+
 	IVoiceStatusHelper	*m_pHelper;		// Each mod provides an implementation of this.
 
 	
@@ -193,6 +197,8 @@ public:
 	bool				m_bInSquelchMode;
 	
 	HSPRITE				m_VoiceHeadModel;		// Voice head model (goes above players who are speaking).
+	HSPRITE				m_VoiceHeadModel2;		// Voice head model (goes above players who are speaking).
+
 	float				m_VoiceHeadModelHeight;	// Height above their head to place the model.
 
 	vgui::Image			*m_pSpeakerLabelIcon;	// Icon next to speaker labels.

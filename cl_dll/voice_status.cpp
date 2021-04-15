@@ -33,7 +33,8 @@
 #include "vgui_loadtga.h"
 #include "vgui_helpers.h"
 #include "VGUI_MouseCode.h"
-
+#include "triangleapi.h"
+//#include "hud.h"
 
 
 using namespace vgui;
@@ -192,9 +193,15 @@ int CVoiceStatus::Init(
 	IVoiceStatusHelper *pHelper,
 	Panel **pParentPanel)
 {
+	CVAR_CREATE("cl_player_names_head", "1", FCVAR_ARCHIVE);
+	CVAR_CREATE("cl_player_names_head_scale", "0.25", FCVAR_ARCHIVE);
+	CVAR_CREATE("cl_player_names_head_render_amt", "255", FCVAR_ARCHIVE);
+
+
+	
 	// Setup the voice_modenable cvar.
 	gEngfuncs.pfnRegisterVariable("voice_modenable", "1", FCVAR_ARCHIVE);
-
+	
 	gEngfuncs.pfnRegisterVariable("voice_clientdebug", "0", 0);
 
 	gEngfuncs.pfnAddCommand("voice_showbanned", ShowBannedCallback);
@@ -210,6 +217,7 @@ int CVoiceStatus::Init(
 
 	m_BlinkTimer = 0;
 	m_VoiceHeadModel = 0;
+	m_VoiceHeadModel2 = 0;
 	memset(m_Labels, 0, sizeof(m_Labels));
 	
 	for(int i=0; i < MAX_VOICE_SPEAKERS; i++)
@@ -311,7 +319,12 @@ int CVoiceStatus::VidInit()
 		gEngfuncs.COM_FreeFile(pFile);
 	}
 
-	m_VoiceHeadModel = gEngfuncs.pfnSPR_Load("sprites/voiceicon.spr");
+	//m_VoiceHeadModel = gEngfuncs.pfnSPR_Load("sprites/voiceicon.spr");
+	m_VoiceHeadModel = gEngfuncs.pfnSPR_Load("sprites/alphabet_test.spr");
+
+	//m_VoiceHeadModel2 = gEngfuncs.pfnSPR_Load("sprites/alphabet_test4.spr");
+	m_VoiceHeadModel2 = gEngfuncs.pfnSPR_Load("sprites/ascii_table_test.spr");
+	
 	return TRUE;
 }
 
@@ -350,17 +363,45 @@ void CVoiceStatus::CreateEntities()
 
 	cl_entity_t *localPlayer = gEngfuncs.GetLocalPlayer();
 
+	/*for (int i = 0; i < MAX_PLAYERS; ++i) {
+				// Make sure the information is up to date.
+				gEngfuncs.pfnGetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
+
+				// This player slot is empty.
+				if (g_PlayerInfoList[i + 1].name == nullptr)
+					continue;
+
+				if (!name_contains_color_tags) {
+					// Try to match by the user ID.
+					if (uid != -1 && IEngineStudio.PlayerInfo(i)->userid == uid) {
+						// Got a match by the user ID.
+						matched_player_index = i;
+						break;
+					}
+
+					// Try to match by the SteamID.
+					if (!strcmp(steam_id::get_steam_id(i).c_str(), name)) {
+						// Got a match by the SteamID.
+						matched_player_index = i;
+						break;
+					}
+				}*/
+	int lx;
+		
 	int iOutModel = 0;
 	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
 	{
-		if(!m_VoicePlayers[i])
-			continue;
+		/*if(!m_VoicePlayers[i])
+			continue;*/
 		
 		cl_entity_s *pClient = gEngfuncs.GetEntityByIndex(i+1);
 		
+		if(CVAR_GET_FLOAT("cl_player_names_head") != 1)
+			continue;
+
 		// Don't show an icon if the player is not in our PVS.
 		if(!pClient || pClient->curstate.messagenum < localPlayer->curstate.messagenum)
-			continue;
+			continue; // TODO: UNCOMMENT
 
 		// Don't show an icon for dead or spectating players (ie: invisible entities).
 		if(pClient->curstate.effects & EF_NODRAW)
@@ -370,28 +411,220 @@ void CVoiceStatus::CreateEntities()
 		if(pClient == localPlayer && !cam_thirdperson)
 			continue;
 
-		cl_entity_s *pEnt = &m_VoiceHeadModels[iOutModel];
-		++iOutModel;
+		//char playerID[16];
+		//gEngfuncs.GetPlayer(i+1, playerID);
+		/*hud_player_info_t info;
+		memset( &info, 0, sizeof( info ) );
+		gEngfuncs.pfnGetPlayerInfo( i, &info );*/
 
-		memset(pEnt, 0, sizeof(*pEnt));
-
-		pEnt->curstate.rendermode = kRenderTransAdd;
-		pEnt->curstate.renderamt = 255;
-		pEnt->baseline.renderamt = 255;
-		pEnt->curstate.renderfx = kRenderFxNoDissipation;
-		pEnt->curstate.framerate = 1;
-		pEnt->curstate.frame = 0;
-		pEnt->model = (struct model_s*)gEngfuncs.GetSpritePointer(m_VoiceHeadModel);
-		pEnt->angles[0] = pEnt->angles[1] = pEnt->angles[2] = 0;
-		pEnt->curstate.scale = 0.5f;
+		char mrdka[256];
+		vec3_t			origin, angles, point, forward, right, left, up, world, screen, offset;
 		
-		pEnt->origin[0] = pEnt->origin[1] = 0;
-		pEnt->origin[2] = 45;
+		VectorCopy(pClient->origin, origin);
+		gEngfuncs.pTriAPI->WorldToScreen(origin, screen);
+		screen[0] = XPROJECT(screen[0]);
+		screen[1] = YPROJECT(screen[1]);
+		screen[2] = 0.0f;
 
-		VectorAdd(pEnt->origin, pClient->origin, pEnt->origin);
 
-		// Tell the engine.
-		gEngfuncs.CL_CreateVisibleEntity(ET_NORMAL, pEnt);
+		char test[256];
+		
+		/*gHUD.DrawConsoleStringWithColorTags(
+			100, //- lx,
+			200,
+			test,
+			true);*/
+		gEngfuncs.pfnDrawConsoleString(100, 200, test);
+			
+		//VectorSubtract(offset, screen, offset );
+
+		int playerNum = pClient->index - 1;
+
+		m_vPlayerPos[playerNum][0] = screen[0];	
+		m_vPlayerPos[playerNum][1] = screen[1]; //+ Length(offset);	
+		m_vPlayerPos[playerNum][2] = 1;	// mark player as visible 
+		
+		_snprintf( mrdka, sizeof( mrdka ), "fm_vPlayerPos[playerNum][0] = %f, m_vPlayerPos[playerNum][1] = %f \n", m_vPlayerPos[playerNum][0], m_vPlayerPos[playerNum][1]);
+		
+		//gEngfuncs.pfnConsolePrint( mrdka );
+
+		
+		char string2[256];
+		// draw the players name and health underneath
+		gEngfuncs.pfnGetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
+		if (g_PlayerInfoList[i + 1].name == nullptr)
+			continue;
+
+		_snprintf( mrdka, sizeof( mrdka ), "name = %s \n", g_PlayerInfoList[i+1].name);
+	
+		//gEngfuncs.pfnConsolePrint( mrdka );
+
+		sprintf(string2, "AHOJ: %s", g_PlayerInfoList[i+1].name );
+		
+		lx = strlen(string2)*3; // 3 is avg. character length :)
+
+		gHUD.DrawConsoleStringWithColorTags(
+			m_vPlayerPos[i][0], //- lx,
+			m_vPlayerPos[i][1],
+			string2,
+			true);
+			
+
+		/*
+		gEngfuncs.pTriAPI->SpriteTexture(  (struct model_s*)gEngfuncs.GetSpritePointer(m_VoiceHeadModel2), 0 );
+		
+		gEngfuncs.pTriAPI->RenderMode( kRenderTransTexture );
+
+			gEngfuncs.pTriAPI->Begin(TRI_QUADS);
+
+			// set the color to be that of the team
+			gEngfuncs.pTriAPI->Color4f(200, 255, 2, 1.0f);
+
+
+			// finish up
+			gEngfuncs.pTriAPI->End();
+			gEngfuncs.pTriAPI->RenderMode( kRenderNormal );
+
+		gEngfuncs.pfnGetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);*/
+		
+		// This player slot is empty.
+		if (g_PlayerInfoList[i + 1].name == nullptr)
+			continue;
+		else
+		{
+			char msg[256];
+			char name[512];
+			char name_alphabet_only[512];
+			color_tags::strip_color_tags(name, g_PlayerInfoList[i + 1].name, ARRAYSIZE(name));
+			color_tags::only_alphabet(name_alphabet_only, name, ARRAYSIZE(name_alphabet_only));
+			std::string name_alphabet_only_as_str(name_alphabet_only);
+			
+			//_snprintf( msg, sizeof( msg ), "CVoiceStatus::name = %s, name_alphabet_only = %s \n", name, name_alphabet_only);
+			//gEngfuncs.pfnConsolePrint( msg );
+			//_snprintf( msg, sizeof( msg ), "alphabet = %s \n", name_alphabet_only_as_str);
+			//gEngfuncs.pfnConsolePrint( msg );
+
+			float cl_player_names_head_scale = CVAR_GET_FLOAT("cl_player_names_head_scale");
+			float cl_player_names_head_render_amt = CVAR_GET_FLOAT("cl_player_names_head_render_amt");
+			float origin_const_scaled = cl_player_names_head_scale * 16;
+
+			for(int i=0; i < sizeof(name_alphabet_only) && name_alphabet_only[i] != '\0'; i++)
+			{
+				cl_entity_s *pEnt = &m_VoiceHeadModels[iOutModel];
+				++iOutModel;
+				int frame = name_alphabet_only[i] - 32;
+							
+				//_snprintf( msg, sizeof( msg ), "frame = %i | name_alphabet_only[i] = %d | length = %d | array size = (%d) | length str = %d \n", frame, 
+				//name_alphabet_only[i], sizeof(name_alphabet_only), ARRAYSIZE(name_alphabet_only), name_alphabet_only_as_str.length());
+
+				//gEngfuncs.pfnConsolePrint( msg );
+
+				memset(pEnt, 0, sizeof(*pEnt));			
+			
+				pEnt->curstate.rendermode = kRenderTransAdd;
+				pEnt->curstate.renderamt = cl_player_names_head_render_amt;
+				pEnt->baseline.renderamt = cl_player_names_head_render_amt;
+				pEnt->curstate.renderfx = kRenderFxNoDissipation;
+				pEnt->curstate.framerate = 1;
+				pEnt->curstate.frame = 0;
+				pEnt->model = (struct model_s*)gEngfuncs.GetSpritePointer(m_VoiceHeadModel2);
+				//pEnt->curstate.scale = 0.25f;
+				
+				pEnt->curstate.scale = cl_player_names_head_scale;
+				
+				pEnt->angles[0] = pClient->angles[0];
+				pEnt->angles[2] = pClient->angles[2];
+
+				pEnt->origin[0] = 0;
+				pEnt->origin[1] = 0;
+				pEnt->origin[2] = 40;
+
+				float localPlayerAnglePositive;
+				float localPlayerAngle = localPlayer->angles[1];
+				float nameLength = name_alphabet_only_as_str.length();
+
+				//mrdat = pClient->angles[1];
+				localPlayerAnglePositive = localPlayer->angles[1];
+
+				if(localPlayerAnglePositive < 0.0) 
+					localPlayerAnglePositive *= -1.0;
+
+				if(localPlayerAnglePositive > 135) // we are facing the same way as origin
+				{
+					pEnt->angles[1] = 180;
+					//pEnt->angles[1] = localPlayerAngle;
+					pEnt->origin[1] = (-(nameLength)/2)*origin_const_scaled + (origin_const_scaled*i);
+
+					_snprintf( msg, sizeof( msg ), "pEnt x=%f,y=%f,z=%f angle x=%f,y=%f,z=%f | \npl x=%f y=%f z=%f | ORIGIN | PL X=%f Y=%f Z=%f\n", pEnt->origin[0], 
+					pEnt->origin[1], 
+					pEnt->origin[2],
+					pEnt->angles[0], pEnt->angles[1], pEnt->angles[2], localPlayer->angles[0], localPlayer->angles[1], localPlayer->angles[2],
+					localPlayer->origin[0], localPlayer->origin[1], localPlayer->origin[2]
+					);
+
+					//gEngfuncs.pfnConsolePrint( msg );
+				}
+				else if(localPlayerAngle < 135 && localPlayerAngle > 45) // we are looking from side
+				{
+					pEnt->angles[1] = 90; 
+					// pEnt->angles[1] = localPlayerAngle;
+					pEnt->origin[0] = (-(nameLength)/2)*origin_const_scaled + (origin_const_scaled*i);
+
+
+					_snprintf( msg, sizeof( msg ), "pEnt x=%f,y=%f,z=%f angle x=%f,y=%f,z=%f | \npl x=%f y=%f z=%f | LEFT | PL ORIGIN: X=%f Y=%f Z=%f\n ", pEnt->origin[0], 
+					pEnt->origin[1], 
+					pEnt->origin[2],
+					pEnt->angles[0], pEnt->angles[1], pEnt->angles[2], localPlayer->angles[0], localPlayer->angles[1], localPlayer->angles[2],
+					localPlayer->origin[0], localPlayer->origin[1], localPlayer->origin[2]
+					);
+					//gEngfuncs.pfnConsolePrint( msg );
+				}
+				else if(localPlayerAngle > -135 && localPlayerAngle < -45) // we are looking from THE OTHER side
+				{
+					pEnt->angles[1] = 270; 
+					//pEnt->angles[1] = localPlayerAngle;					
+					pEnt->origin[0] = (nameLength/2)*origin_const_scaled - origin_const_scaled*i;
+
+					_snprintf( msg, sizeof( msg ), "pEnt x=%f,y=%f,z=%f angle x=%f,y=%f,z=%f | \npl x=%f y=%f z=%f | RIGHT | PL ORIGIN: X=%f Y=%f Z=%f \n", pEnt->origin[0], 
+					pEnt->origin[1], 
+					pEnt->origin[2],
+					pEnt->angles[0], pEnt->angles[1], pEnt->angles[2], localPlayer->angles[0], localPlayer->angles[1], localPlayer->angles[2],
+					localPlayer->origin[0], localPlayer->origin[1], localPlayer->origin[2]
+					);
+					//gEngfuncs.pfnConsolePrint( msg );
+				}
+				else //WE LOOKING at origin from in front of it
+				{
+					pEnt->angles[1] = 0; 
+					//pEnt->angles[1] = localPlayerAngle;					
+					//pEnt->origin[1] = ((nameLength/2)*16 - 16*i);
+					//pEnt->origin[1] = (nameLength/2)*5 - 5*i;
+					pEnt->origin[1] = (nameLength/2)*origin_const_scaled - origin_const_scaled*i;
+				
+					//pEnt->origin[0] = 16 - pEnt->origin[1]; // TOHLE JE NA PICU A MAS ZKURVENEJ ZUB KRETENE
+					//
+					//pEnt->origin[1] = (localPlayerAnglePositive / 3.0f) + (16*i);
+					//píčovina below		
+					
+
+
+					_snprintf( msg, sizeof( msg ), "ENT ORIGIN x=%f,y=%f,z=%f | ANGLE x=%f,y=%f,z=%f |\n pl x=%f y=%f z=%f | ELSE | PL ORIGIN: X=%f Y=%f Z=%f \n", pEnt->origin[0], 
+					pEnt->origin[1], 
+					pEnt->origin[2],
+					pEnt->angles[0], pEnt->angles[1], pEnt->angles[2], localPlayer->angles[0], localPlayer->angles[1], localPlayer->angles[2],
+					localPlayer->origin[0], localPlayer->origin[1], localPlayer->origin[2]
+					);
+					//gEngfuncs.pfnConsolePrint( msg );
+				}
+				
+				VectorAdd(pEnt->origin, pClient->origin, pEnt->origin);
+
+				//pEnt2->origin[1] += 5.0; 
+				gEngfuncs.CL_CreateVisibleEntity(ET_NORMAL, pEnt);
+			}
+
+		}
+	
 	}
 }
 
