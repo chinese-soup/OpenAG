@@ -239,6 +239,7 @@ void __CmdFunc_ToggleServerBrowser( void )
 	if ( gViewPort )
 	{
 		gViewPort->ToggleServerBrowser();
+		
 	}
 }
 
@@ -731,6 +732,7 @@ void CHud :: VidInit( void )
 	m_Location.VidInit();
 	m_NextMap.VidInit();
 	m_PlayerId.VidInit();
+	m_NameTags.VidInit();
 	m_Scores.VidInit();
 	m_Settings.VidInit();
 	m_Speedometer.VidInit();
@@ -739,6 +741,7 @@ void CHud :: VidInit( void )
 	m_Timer.VidInit();
 	m_Vote.VidInit();
 	m_Watermark.VidInit();
+	//m_NameTagsVGUI.VidInit();
 	GetClientVoiceMgr()->VidInit();
 }
 
