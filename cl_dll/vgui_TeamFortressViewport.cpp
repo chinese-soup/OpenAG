@@ -1403,6 +1403,13 @@ void TeamFortressViewport::ShowScoreBoard( void )
 		// No Scoreboard in single-player
 		if ( gEngfuncs.GetMaxClients() > 1 )
 		{
+			if (CVAR_GET_FLOAT("cl_old_scoreboard") == 1)
+			{
+				gHUD.m_OldScoreBoard.ShowScoreboard(true);
+                UpdateCursorState();
+				return;
+			}
+
 			m_pScoreBoard->Open();
 			UpdateCursorState();
 		}
@@ -1416,7 +1423,7 @@ bool TeamFortressViewport::IsScoreBoardVisible( void )
 {
 	if (m_pScoreBoard)
 		return m_pScoreBoard->isVisible();
-
+    // TODO: OLD SCOREBOARD FUNC HERE
 	return false;
 }
 
@@ -1428,6 +1435,13 @@ void TeamFortressViewport::HideScoreBoard( void )
 	// Prevent removal of scoreboard during intermission
 	if ( gHUD.m_iIntermission )
 		return;
+
+	if ( CVAR_GET_FLOAT("cl_old_scoreboard") == 1 )
+	{
+		gHUD.m_OldScoreBoard.ShowScoreboard(false);
+        UpdateCursorState();
+		return;
+	}
 
 	if (m_pScoreBoard)
 	{
