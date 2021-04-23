@@ -1406,7 +1406,7 @@ void TeamFortressViewport::ShowScoreBoard( void )
 			if (CVAR_GET_FLOAT("cl_old_scoreboard") == 1)
 			{
 				gHUD.m_OldScoreBoard.ShowScoreboard(true);
-                UpdateCursorState();
+                UpdateCursorState(); // TODO: eh
 				return;
 			}
 
@@ -1439,7 +1439,7 @@ void TeamFortressViewport::HideScoreBoard( void )
 	if ( CVAR_GET_FLOAT("cl_old_scoreboard") == 1 )
 	{
 		gHUD.m_OldScoreBoard.ShowScoreboard(false);
-        UpdateCursorState();
+        UpdateCursorState(); // TODO: eh
 		return;
 	}
 

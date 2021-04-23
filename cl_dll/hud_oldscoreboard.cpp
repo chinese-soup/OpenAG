@@ -107,8 +107,8 @@ int CHudOldScoreboard::Draw(float fTime)
 	PING_RANGE_MIN  = 245 * m_WidthScale;
 	PING_RANGE_MAX  = 295 * m_WidthScale;
 
-	gEngfuncs.Con_Printf("NAME_RANGE_MIN = %i \n", NAME_RANGE_MIN);
-	gEngfuncs.Con_Printf("PING_RANGE_MAX = %i \n", PING_RANGE_MAX);
+	//gEngfuncs.Con_Printf("NAME_RANGE_MIN = %i \n", NAME_RANGE_MIN);
+	//gEngfuncs.Con_Printf("PING_RANGE_MAX = %i \n", PING_RANGE_MAX);
 
 	int r, g, b;
 	UnpackRGB(r,g,b, gHUD.m_iDefaultHUDColor);
@@ -118,7 +118,7 @@ int CHudOldScoreboard::Draw(float fTime)
 	// just sort the list on the fly
 	// list is sorted first by frags, then by deaths
 	float list_slot = 0;
-	int xpos_rel = ((ScreenWidth - m_pCvarOldScoreboardWidth->value) / 2) - MAGIC;
+	int xpos_rel = ((ScreenWidth - m_pCvarOldScoreboardWidth->value) / 2);
 
 	/* INFO:
 	 * WINDOWS e Trebuchet MS = 9x8
@@ -263,7 +263,7 @@ int CHudOldScoreboard::Draw(float fTime)
 
 			std::string szName_string(pl_info->name);
 			int max_length = 0;
-			for( int i = szName_string.length(); i > 0; i-- )
+			/*for( int i = szName_string.length(); i > 0; i-- )
 			{
 				if ( letter_m_width * i > KILLS_RANGE_MIN )
 					continue;
@@ -272,6 +272,20 @@ int CHudOldScoreboard::Draw(float fTime)
 					max_length = i;
 					break;
 				}
+			}*/
+			int length = 0;
+			//TODO: TOMORROW SOMETHING LIKE THIS v INSTEAD OF ^^ BUT NON-RETARDED
+			for(int i = 0; i < szName_string.size(); i++)
+			{
+				if (szName_string[i] > ' ' && szName_string[i] < '~') // only printable ascii
+					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>(szName_string[i]) ];
+				else // assume the worst - longest length
+					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>('m') ];
+
+				max_length = i+1; // not in the following if statement since we can get a name that fits without cutting
+
+				if(length > KILLS_RANGE_MIN)
+					break;
 			}
 			szName_string = szName_string.substr(0, max_length);
 
