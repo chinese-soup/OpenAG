@@ -102,7 +102,8 @@ int CHudOldScoreboard::Draw(float fTime)
 	KILLS_RANGE_MIN = 130 * m_WidthScale;
 	KILLS_RANGE_MAX = 170 * m_WidthScale;
 	DIVIDER_POS     = 180 * m_WidthScale;
-	DEATHS_RANGE_MIN = 185 * m_WidthScale;
+	DEATHS_RANGE_MIN = 190 * m_WidthScale;
+	//DEATHS_RANGE_MIN = 185 * m_WidthScale;
 	DEATHS_RANGE_MAX = 210 * m_WidthScale;
 	PING_RANGE_MIN  = 245 * m_WidthScale;
 	PING_RANGE_MAX  = 295 * m_WidthScale;
@@ -134,9 +135,10 @@ int CHudOldScoreboard::Draw(float fTime)
 		gHUD.DrawHudString( xpos, ypos, NAME_RANGE_MAX + xpos_rel, "Teams", r, g, b );
 
 	//gHUD.DrawHudStringReverse( KILLS_RANGE_MAX + xpos_rel, ypos, 0, CHudTextMessage::BufferedLocaliseTextString("#SCORE"), r, g, b );
-	gHUD.DrawHudStringRightAligned( DIVIDER_POS + xpos , ypos, CHudTextMessage::BufferedLocaliseTextString("#SCORE"), r, g, b );
+	//gHUD.DrawHudStringRightAligned( DIVIDER_POS + xpos , ypos, CHudTextMessage::BufferedLocaliseTextString("#SCORE"), r, g, b );
+	gHUD.DrawHudString(KILLS_RANGE_MIN + xpos_rel  , ypos, 0, CHudTextMessage::BufferedLocaliseTextString("#SCORE"), r, g, b );
 	gHUD.DrawHudString( DIVIDER_POS + xpos_rel, ypos, ScreenWidth, "/", r, g, b );
-	gHUD.DrawHudString( DEATHS_RANGE_MIN + xpos_rel + 5, ypos, ScreenWidth, CHudTextMessage::BufferedLocaliseTextString("#DEATHS"), r, g, b );
+	gHUD.DrawHudString( DEATHS_RANGE_MIN + xpos_rel , ypos, ScreenWidth, CHudTextMessage::BufferedLocaliseTextString("#DEATHS"), r, g, b );
 	//gHUD.DrawHudString( PING_RANGE_MAX + xpos_rel - 35, ypos, 0, CHudTextMessage::BufferedLocaliseTextString("#LATENCY"), r, g, b );
 
 	xpos = ((PING_RANGE_MAX - PING_RANGE_MIN) / 2) + PING_RANGE_MIN + xpos_rel + 95;
@@ -246,7 +248,6 @@ int CHudOldScoreboard::Draw(float fTime)
 				// overlay the background in blue,  then draw the score text over it
 				FillRGBA( NAME_RANGE_MIN + xpos_rel - 5, ypos + 5, PING_RANGE_MAX - 5, ROW_GAP, 0, 0, 255, 70 );
 			}
-
 			// TODO: steal CTF stuff from vgui_scoreboard
 			/*if (gHUD.m_CTF.GetBlueFlagPlayerIndex() == sorted[iRow] || gHUD.m_CTF.GetRedFlagPlayerIndex() == sorted[iRow])
 			{
@@ -261,28 +262,24 @@ int CHudOldScoreboard::Draw(float fTime)
 			// the original AG 6.6 client DLL does (probably because of charWidths obviously not supporting unicode?)
 			int letter_m_width = gHUD.m_scrinfo.charWidths[static_cast<unsigned char>('m')];
 
-			std::string szName_string(pl_info->name);
+            char szName[128];
+            snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
+            color_tags::strip_color_tags(szName, szName, ARRAYSIZE(szName));
+			std::string szName_string(szName);
+			// TODO: CALCULATE LENGTH ON NON-COLOR TAGS NICKNAME
+			// TODO: BUT ADD THEM BACK IF CvarOldScoreboardShowColorTags = 1
+
 			int max_length = 0;
-			/*for( int i = szName_string.length(); i > 0; i-- )
-			{
-				if ( letter_m_width * i > KILLS_RANGE_MIN )
-					continue;
-				else
-				{
-					max_length = i;
-					break;
-				}
-			}*/
 			int length = 0;
-			//TODO: TOMORROW SOMETHING LIKE THIS v INSTEAD OF ^^ BUT NON-RETARDED
-			for(int i = 0; i < szName_string.size(); i++)
+
+			for( int i = 0; i < szName_string.size(); i++ )
 			{
 				if (szName_string[i] > ' ' && szName_string[i] < '~') // only printable ascii
 					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>(szName_string[i]) ];
 				else // assume the worst - longest length
 					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>('m') ];
 
-				max_length = i+1; // not in the following if statement since we can get a name that fits without cutting
+				max_length = i + 1; // not in the following "if statement" since we can get a name that already fits
 
 				if(length > KILLS_RANGE_MIN)
 					break;
@@ -292,11 +289,11 @@ int CHudOldScoreboard::Draw(float fTime)
 			if (g_IsSpectator[scoreboard->m_iSortedRows[iRow]])
 				szName_string += "  (S)";
 
-			char szName[128];
-			snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
-			strcpy(szName, szName_string.c_str());
+			//snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
+            strcpy(szName, szName_string.c_str());
 
 			if (m_pCvarOldScoreboardShowColorsTags->value != 1)
+                //snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
 				color_tags::strip_color_tags(szName, szName, ARRAYSIZE(szName));
 
 			// draw their name (left to right)
