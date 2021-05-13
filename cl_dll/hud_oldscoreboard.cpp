@@ -28,15 +28,15 @@ We have a minimum width of 1-320 - we could have the field widths scale with it?
 // Y positions
 // Those who play on Apple 32 bit don't deserve old_scoreboard looking good, sorry
 #ifdef LINUX
-//#define ROW_GAP  15
-#define ROW_GAP ( gHUD.m_scrinfo.iCharHeight - 5)
-//#define ROW_RANGE_MIN 17
-#define ROW_RANGE_MIN ( gHUD.m_scrinfo.iCharHeight + 3)
-#define MAGIC 0
+    //#define ROW_GAP  15
+    #define ROW_GAP ( gHUD.m_scrinfo.iCharHeight - 5)
+    //#define ROW_RANGE_MIN 17
+    #define ROW_RANGE_MIN ( gHUD.m_scrinfo.iCharHeight + 3)
+    #define MAGIC 0
 #else
-#define ROW_GAP  ( gHUD.m_scrinfo.iCharHeight )
-#define ROW_RANGE_MIN ( gHUD.m_scrinfo.iCharHeight + 2)
-#define MAGIC 2
+    #define ROW_GAP  ( gHUD.m_scrinfo.iCharHeight - 5)
+    #define ROW_RANGE_MIN ( gHUD.m_scrinfo.iCharHeight + 2)
+    #define MAGIC 2
 #endif // LINUX
 
 #define ROW_RANGE_MAX ( ScreenHeight - 50 )
@@ -95,18 +95,23 @@ int CHudOldScoreboard::Draw(float fTime)
 	if (!m_bShowScoreboard)
 		return 1;
 
+#ifdef LINUX
+#define LINUX_WIDTH 2
+#else
+#define LINUX_WIDTH 0
+#endif
 	/* As close to the original as we can get */
 	m_WidthScale = m_pCvarOldScoreboardWidth->value / 320.0f;
-	NAME_RANGE_MIN = 20 * m_WidthScale;
-	NAME_RANGE_MAX = 145 * m_WidthScale;
-	KILLS_RANGE_MIN = 130 * m_WidthScale;
-	KILLS_RANGE_MAX = 170 * m_WidthScale;
-	DIVIDER_POS     = 180 * m_WidthScale;
-	DEATHS_RANGE_MIN = 190 * m_WidthScale;
+	NAME_RANGE_MIN = 20 * m_WidthScale + LINUX_WIDTH;
+	NAME_RANGE_MAX = 145 * m_WidthScale + LINUX_WIDTH * 2;
+	KILLS_RANGE_MIN = 130 * m_WidthScale + LINUX_WIDTH;
+	KILLS_RANGE_MAX = 170 * m_WidthScale + LINUX_WIDTH * 2;
+	DIVIDER_POS     = 180 * m_WidthScale + LINUX_WIDTH;
+	DEATHS_RANGE_MIN = 190 * m_WidthScale + LINUX_WIDTH;
 	//DEATHS_RANGE_MIN = 185 * m_WidthScale;
-	DEATHS_RANGE_MAX = 210 * m_WidthScale;
-	PING_RANGE_MIN  = 245 * m_WidthScale;
-	PING_RANGE_MAX  = 295 * m_WidthScale;
+	DEATHS_RANGE_MAX = 210 * m_WidthScale + LINUX_WIDTH * 2;
+	PING_RANGE_MIN  = 245 * m_WidthScale + LINUX_WIDTH;
+	PING_RANGE_MAX  = 295 * m_WidthScale + LINUX_WIDTH * 2;
 
 	//gEngfuncs.Con_Printf("NAME_RANGE_MIN = %i \n", NAME_RANGE_MIN);
 	//gEngfuncs.Con_Printf("PING_RANGE_MAX = %i \n", PING_RANGE_MAX);
@@ -122,8 +127,8 @@ int CHudOldScoreboard::Draw(float fTime)
 	int xpos_rel = ((ScreenWidth - m_pCvarOldScoreboardWidth->value) / 2);
 
 	/* INFO:
-	 * WINDOWS e Trebuchet MS = 9x8
-	 * LINUX e Trebuchet MS = 11x10 */
+	 * WINDOWS = Trebuchet MS = 9x8
+	 * LINUX = Trebuchet MS = 11x10 */
 
 	// print the heading line
 	ypos = ROW_TOP + ROW_RANGE_MIN + (list_slot * ROW_GAP);
@@ -139,6 +144,7 @@ int CHudOldScoreboard::Draw(float fTime)
 	gHUD.DrawHudString(KILLS_RANGE_MIN + xpos_rel  , ypos, 0, CHudTextMessage::BufferedLocaliseTextString("#SCORE"), r, g, b );
 	gHUD.DrawHudString( DIVIDER_POS + xpos_rel, ypos, ScreenWidth, "/", r, g, b );
 	gHUD.DrawHudString( DEATHS_RANGE_MIN + xpos_rel , ypos, ScreenWidth, CHudTextMessage::BufferedLocaliseTextString("#DEATHS"), r, g, b );
+
 	//gHUD.DrawHudString( PING_RANGE_MAX + xpos_rel - 35, ypos, 0, CHudTextMessage::BufferedLocaliseTextString("#LATENCY"), r, g, b );
 
 	xpos = ((PING_RANGE_MAX - PING_RANGE_MIN) / 2) + PING_RANGE_MIN + xpos_rel + 95;
@@ -266,28 +272,33 @@ int CHudOldScoreboard::Draw(float fTime)
             snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
             color_tags::strip_color_tags(szName, szName, ARRAYSIZE(szName));
 			std::string szName_string(szName);
-			// TODO: CALCULATE LENGTH ON NON-COLOR TAGS NICKNAME
+
+            // TODO: CALCULATE LENGTH ON NON-COLOR TAGS NICKNAME
 			// TODO: BUT ADD THEM BACK IF CvarOldScoreboardShowColorTags = 1
 
-			int max_length = 0;
+            int max_length = 0;
 			int length = 0;
 
 			for( int i = 0; i < szName_string.size(); i++ )
 			{
-				if (szName_string[i] > ' ' && szName_string[i] < '~') // only printable ascii
+                if (szName_string[i] > ' ' && szName_string[i] < '~') // only printable ascii
 					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>(szName_string[i]) ];
 				else // assume the worst - longest length
 					length += gHUD.m_scrinfo.charWidths[ static_cast<unsigned char>('m') ];
 
-				max_length = i + 1; // not in the following "if statement" since we can get a name that already fits
-
 				if(length > KILLS_RANGE_MIN)
-					break;
-			}
-			szName_string = szName_string.substr(0, max_length);
+                    break;
+
+                max_length = i + 1; // this is here and not in the following "if statement" since name can already fit
+            }
 
 			if (g_IsSpectator[scoreboard->m_iSortedRows[iRow]])
-				szName_string += "  (S)";
+                max_length -= 4; // If we're drawing a spectator name, we're adding " (S)" to it
+
+            szName_string = szName_string.substr(0, max_length);
+
+            if (g_IsSpectator[scoreboard->m_iSortedRows[iRow]])
+                szName_string += " (S)";
 
 			//snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
             strcpy(szName, szName_string.c_str());
@@ -305,10 +316,11 @@ int CHudOldScoreboard::Draw(float fTime)
 			gHUD.DrawHudNumberStringFixed( xpos, ypos, pl_info_extra->frags, r, g, b );
 
 			// draw divider
-			xpos = DIVIDER_POS + xpos_rel;
-			gHUD.DrawHudString( xpos, ypos, xpos + 20, "/", r, g, b );
+			//xpos = DIVIDER_POS + xpos_rel;
+			xpos = (KILLS_RANGE_MAX - DEATHS_RANGE_MAX) / 2 + xpos_rel;
+			gHUD.DrawHudString( DIVIDER_POS + xpos_rel, ypos, ScreenWidth, "/", r, g, b );
 
-			// draw deaths
+            // draw deaths
 			xpos = DEATHS_RANGE_MAX + xpos_rel;
 			gHUD.DrawHudNumberStringFixed( xpos, ypos, pl_info_extra->deaths, r, g, b );
 
