@@ -10,11 +10,12 @@ class CHudOldScoreboard: public CHudBase
 public:
 	int Init( void );
 	int VidInit( void );
-	int Draw(float flTime);
-	void Reset(void);
+	int Draw( float flTime );
+	void Reset( void );
 
-	bool IsVisible();
-	void ShowScoreboard(bool bShow = true);
+	bool IsVisible( );
+	const char CutNicknameOff( char name, int nameoffset = 0 );
+	void ShowScoreboard( bool bShow = true );
 private:
 	typedef struct
 	{
@@ -25,7 +26,6 @@ private:
 	icon_flagstatus_t m_IconFlagScore;
 
 	bool m_bShowScoreboard;
-	int DrawPlayers( int xoffset, float listslot, int nameoffset = 0, char *team = NULL ); // returns the ypos where it finishes drawing
 
 	cvar_t *m_pCvarOldScoreboard;
 	cvar_t *m_pCvarOldScoreboardWidth;
