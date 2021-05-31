@@ -6,6 +6,7 @@
 #include "vgui_TeamFortressViewport.h"
 #include "hud_oldscoreboard.h"
 #include "vgui_ScorePanel.h"
+#include "steam_id.h"
 
 // Y positions
 // Those who play on killed-off 32bit Apple don't deserve old_scoreboard looking good
@@ -28,7 +29,6 @@
 
 #define ROW_GAP (gHUD.m_scrinfo.iCharHeight - 5)
 #define ROW_RANGE_MAX ( ScreenHeight - 50 )
-#define ROW_TOP 40
 
 #define TEAM_NO             0
 #define TEAM_YES            1
@@ -84,6 +84,11 @@ int CHudOldScoreboard::Draw(float fTime)
 {
 	if (!IsVisible())
 		return 1;
+
+	// This is calculated so that the HLKreedz timer is not in the way on ANY res
+	// Since both the timer and the start height of the scoreboard are changed with different resolution
+	// And it's calculated dynamically since one can change the ScreenHeight by resizing the window during game
+	int ROW_TOP = (ScreenHeight / 320.0f) * 30.0f;
 
 	// Let users use 320 even on Linux, if they really want to
 	int width = max(min((int)m_pCvarOldScoreboardWidth->value, ScreenWidth), 320);
@@ -240,7 +245,14 @@ int CHudOldScoreboard::Draw(float fTime)
 
 			char szName[128];
 			int specoffset = 0;
-			snprintf(szName, ARRAYSIZE(szName), "%s", pl_info->name);
+			const char* name = nullptr;
+
+			if (steam_id::is_showing_real_names())
+				name = steam_id::get_real_name(scoreboard->m_iSortedRows[iRow] - 1).c_str();
+			if (!name || name[0] == '\0')
+				name = pl_info->name;
+
+			snprintf(szName, ARRAYSIZE(szName), "%s", name);
 
 			// If this player is a spectator we need to also fit " (S)" in, let's prepare for that
 			if (g_IsSpectator[scoreboard->m_iSortedRows[iRow]])
