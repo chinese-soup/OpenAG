@@ -1833,6 +1833,8 @@ void CHudSpectator::DrawOverview()
 	if ( m_iDrawCycle == 1 && m_pip->value < INSET_MAP_FREE )
 		return;
 
+	return;
+
 	DrawOverviewLayer();
 	DrawOverviewEntities();
 	CheckOverviewEntities();
@@ -1845,7 +1847,7 @@ void CHudSpectator::CheckOverviewEntities()
 	for ( int i = 0; i< MAX_OVERVIEW_ENTITIES; i++ )
 	{
 		// remove entity from list if it is too old
-		if ( m_OverviewEntities[i].killTime < time )
+		if ( m_OverviewEntities[i].killTime < time ) // TODO: SOUP: -1000?
 		{
 			memset( &m_OverviewEntities[i], 0, sizeof (overviewEntity_t) );
 		}
@@ -1877,10 +1879,11 @@ bool CHudSpectator::AddOverviewEntity( int type, struct cl_entity_s *ent, const 
 	}
 	else if (type == ET_NORMAL)
 	{
-		return false;
+		//return false;
 	}
 	else
-		return false;	
+		//return false;
+	hSprite = m_hsprPlayer;
 
 	return AddOverviewEntityToList(hSprite, ent, gEngfuncs.GetClientTime() + duration );
 }
@@ -1919,13 +1922,13 @@ void CHudSpectator::CheckSettings()
 	if ( ( g_iUser1 < OBS_MAP_FREE ) && ( m_pip->value == INSET_CHASE_FREE || m_pip->value == INSET_IN_EYE ) )
 	{
 		// otherwise both would show in World picures
-		m_pip->value = INSET_MAP_FREE;
+		//m_pip->value = INSET_MAP_FREE;
 	}
 
 	if ( ( g_iUser1 >= OBS_MAP_FREE ) && ( m_pip->value >= INSET_MAP_FREE ) )
 	{
 		// both would show map views
-		m_pip->value = INSET_CHASE_FREE;
+		//m_pip->value = INSET_CHASE_FREE;
 	} 
 
 	// disble in intermission screen
@@ -2023,7 +2026,7 @@ void CHudSpectator::Reset()
 
 	memset( &m_OverviewEntities, 0, sizeof(m_OverviewEntities));
 
-	m_FOV = 90.0f;
+	//m_FOV = 90.0f;
 
 	m_IsInterpolating = false;
 

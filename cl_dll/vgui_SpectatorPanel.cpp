@@ -348,7 +348,7 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 		
 		m_InsetViewButton->setBounds(	XRES( x -1 ), YRES( y ), 
 										XRES( wide +2), YRES( tall ) );
-		m_InsetViewButton->setVisible(true);
+		//m_InsetViewButton->setVisible(true);
 	}
 	else
 	{	

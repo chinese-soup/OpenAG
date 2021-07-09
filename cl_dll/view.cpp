@@ -94,6 +94,10 @@ cvar_t	*cl_viewmodel_ofs_right;
 cvar_t	*cl_viewmodel_ofs_forward;
 cvar_t	*cl_viewmodel_ofs_up;
 
+cvar_t *cl_pip;
+cvar_t *cl_splitscreen;
+cvar_t	*cl_pip2;
+
 // These cvars are not registered (so users can't cheat), so set the ->value field directly
 // Register these cvars in V_Init() if needed for easy tweaking
 cvar_t	v_iyaw_cycle		= {"v_iyaw_cycle", "2", 0, 2};
@@ -515,12 +519,43 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	if ( gEngfuncs.IsSpectateOnly() )
 	{
-		ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+		//ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+		if(pparams->nextView == 0)
+		{
+			ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+			gEngfuncs.Con_Printf("nextview == 0, g_iUser2\n");
+		}
+		else if(pparams->nextView == 1)
+		{
+			ent = gEngfuncs.GetEntityByIndex( (int)cl_pip->value );
+			gEngfuncs.Con_Printf("nextview == 1, cl_pip\n");
+		}
+		else
+		{
+			ent = gEngfuncs.GetEntityByIndex( (int)cl_pip2->value );
+			gEngfuncs.Con_Printf("nextview == 2, cl_pip2\n");
+		}
 	}
 	else
 	{
 		// ent is the player model ( visible when out of body )
-		ent = gEngfuncs.GetLocalPlayer();
+		//ent = gEngfuncs.GetLocalPlayer();
+
+		if(pparams->nextView == 0)
+		{
+			ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+			gEngfuncs.Con_Printf("nextview == 0, g_iUser2\n");
+		}
+		else if(pparams->nextView == 1)
+		{
+			ent = gEngfuncs.GetEntityByIndex( (int)cl_pip->value );
+			gEngfuncs.Con_Printf("nextview == 1, cl_pip\n");
+		}
+		else
+		{
+			ent = gEngfuncs.GetEntityByIndex( (int)cl_pip2->value );
+			gEngfuncs.Con_Printf("nextview == 2, cl_pip2\n");
+		}
 	}
 	
 	// view is the weapon model (only visible from inside body )
@@ -847,7 +882,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 		{
 			VectorCopy( viewentity->origin, pparams->vieworg );
 			VectorCopy( viewentity->angles, pparams->viewangles );
-
+			gEngfuncs.Con_Printf("OVERRIDE?\n"); // TODO: SS
 			// Store off overridden viewangles
 			v_angles = pparams->viewangles;
 		}
@@ -1499,8 +1534,24 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 	static int lastWeaponModelIndex = 0;
 	static int lastViewModelIndex = 0;
 		
-	cl_entity_t	 * ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
-	
+	//cl_entity_t	 * ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+	cl_entity_t	 * ent = NULL;
+	if(pparams->nextView == 0)
+	{
+		gEngfuncs.Con_Printf("ent|nextView == 0\n");
+		ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
+	}
+	else if(pparams->nextView == 1)
+	{
+		gEngfuncs.Con_Printf("ent|nextView == 1\n");
+		ent = gEngfuncs.GetEntityByIndex( (int)cl_pip->value );
+	}
+	else
+	{
+		gEngfuncs.Con_Printf("ent|nextView == 2\n");
+		ent = gEngfuncs.GetEntityByIndex( (int)cl_pip2->value );
+	}
+
 	pparams->onlyClientDraw = false;
 
 	// refresh position
@@ -1529,12 +1580,8 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 			VectorCopy(velocity, pparams->simvel);
 		}
 
-		// predict missing client data and set weapon model ( in HLTV mode or inset in eye mode )
-//#ifdef _TFC
+
 		if ( gEngfuncs.IsSpectateOnly() || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE || g_iUser1 == OBS_IN_EYE )
-//#else
-//		if ( gEngfuncs.IsSpectateOnly() )
-//#endif
 		{
 			if ( gHUD.m_pCvarViewheightMode->value != 0.0f && ( gHUD.m_Spectator.m_pip->value == INSET_IN_EYE || g_iUser1 == OBS_IN_EYE ) )
 			{
@@ -1553,8 +1600,10 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 			}
 			else
 			{
-				V_GetInEyePos( g_iUser2, pparams->simorg, pparams->cl_viewangles );
+				if( cl_splitscreen->value == 0.0f )
+					V_GetInEyePos( g_iUser2, pparams->simorg, pparams->cl_viewangles ); // TODO: SS
 			}
+
 
 			pparams->health = 1;
 
@@ -1583,20 +1632,20 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 				gunModel->model = IEngineStudio.GetModelByIndex( lastViewModelIndex );
 				gunModel->curstate.modelindex = lastViewModelIndex;
 				gunModel->curstate.frame = 0;
-				gunModel->curstate.colormap = 0; 
+				gunModel->curstate.colormap = 0;
 				gunModel->index = g_iUser2;
 			}
 			else
 			{
 				gunModel->model = NULL;	// disable weaopn model
 			}
-		}
-		else
-		{
-			// only get viewangles from entity
-			VectorCopy ( ent->angles, pparams->cl_viewangles );
-			pparams->cl_viewangles[PITCH]*=-3.0f;	// see CL_ProcessEntityUpdate()
-		}
+	}
+	else
+	{
+		// only get viewangles from entity
+		VectorCopy ( ent->angles, pparams->cl_viewangles );
+		pparams->cl_viewangles[PITCH]*=-3.0f;	// see CL_ProcessEntityUpdate()
+	}
 	}
 
 	v_frametime = pparams->frametime;
@@ -1605,55 +1654,124 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 	{
 		// first renderer cycle, full screen
 
-		switch ( g_iUser1 )
+		//gEngfuncs.Con_Printf("CAW VIEW == 0\n");
+		if (cl_splitscreen->value == 0.0f)
 		{
-			case OBS_CHASE_LOCKED:	V_GetChasePos( g_iUser2, NULL, v_origin, v_angles );
-									break;
+			switch ( g_iUser1 )
+			{
+				case OBS_CHASE_LOCKED:	V_GetChasePos( g_iUser2, NULL, v_origin, v_angles );
+					break;
 
-			case OBS_CHASE_FREE:	V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
-									break;
+				case OBS_CHASE_FREE:	V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
+					break;
 
-			case OBS_ROAMING	:	VectorCopy (v_cl_angles, v_angles);
-									VectorCopy (v_sim_org, v_origin);
-									
-									// override values if director is active
-									gHUD.m_Spectator.GetDirectorCamera(v_origin, v_angles);
-									break;
+				case OBS_ROAMING	:	VectorCopy (v_cl_angles, v_angles);
+					VectorCopy (v_sim_org, v_origin);
 
-			case OBS_IN_EYE		:   V_CalcNormalRefdef ( pparams );
-									break;
-				
-			case OBS_MAP_FREE  :	pparams->onlyClientDraw = true;
-									V_GetMapFreePosition( v_cl_angles, v_origin, v_angles );
-									break;
+					// override values if director is active
+					gHUD.m_Spectator.GetDirectorCamera(v_origin, v_angles);
+					break;
 
-			case OBS_MAP_CHASE  :	pparams->onlyClientDraw = true;
-									V_GetMapChasePosition( g_iUser2, v_cl_angles, v_origin, v_angles );
-									break;
+				case OBS_IN_EYE		:   V_CalcNormalRefdef ( pparams );
+					break;
+
+				case OBS_MAP_FREE  :	pparams->onlyClientDraw = true;
+					V_GetMapFreePosition( v_cl_angles, v_origin, v_angles );
+					break;
+
+				case OBS_MAP_CHASE  :	pparams->onlyClientDraw = true;
+					V_GetMapChasePosition( g_iUser2, v_cl_angles, v_origin, v_angles );
+					break;
+			}
+
+			// write back new values into pparams
+			VectorCopy ( v_cl_angles, pparams->cl_viewangles );
+			VectorCopy ( v_angles, pparams->viewangles )
+			VectorCopy ( v_origin, pparams->vieworg );
+		}
+		else
+		{
+			pparams->onlyClientDraw = true;
+
+			pparams->viewport[0] = XRES(0);	// change viewport to inset window
+			pparams->viewport[1] = YRES(0);
+			pparams->viewport[2] = XRES(0);
+			pparams->viewport[3] = YRES(0);
+			//V_CalcNormalRefdef ( pparams );
 		}
 
-		if ( gHUD.m_Spectator.m_pip->value )
+
+		if ( gHUD.m_Spectator.m_pip->value ) // TODO: SS soup enable pip even without cl_ss
+		//if( cl_splitscreen->value != 0.0f )
 			pparams->nextView = 1;	// force a second renderer view
 
 		gHUD.m_Spectator.m_iDrawCycle = 0;
 
+
+	}
+	else if ( pparams->nextView == 1 )
+	{
+		//gEngfuncs.Con_Printf("CAW VIEW == 1\n");
+		//V_GetInEyePos( g_iUser2, pparams->simorg, pparams->cl_viewangles );
+		gEngfuncs.Con_Printf("ent id FOR PIP1 = %d\n", ent->index);
+
+		VectorCopy ( ent->origin, pparams->simorg );
+		VectorCopy ( ent->angles, pparams->cl_viewangles );
+		//V_GetInEyePos( (int)cl_pip->value, pparams->simorg, pparams->cl_viewangles ); // TODO: NOT USE
+		V_CalcNormalRefdef ( pparams );
+
+		pparams->viewport[0] = XRES(0);	// change viewport to inset window
+		pparams->viewport[1] = YRES(0);
+		//pparams->viewport[2] = XRES(640);
+		//pparams->viewport[2] = XRES(320);
+		pparams->viewport[2] = XRES(320); // TODO: ss
+		pparams->viewport[3] = YRES(480);
+		/*pparams->viewport[0] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowX);	// change viewport to inset window
+		pparams->viewport[1] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowY);
+		pparams->viewport[2] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowWidth);
+		pparams->viewport[3] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowHeight + 450);*/
+
+		if ( gHUD.m_Spectator.m_pip->value )
+			//pparams->nextView = 0;	// force a third renderer view TODO: switch BACK
+			pparams->nextView = 2;	// force a third renderer view
+
+		gHUD.m_Spectator.m_iDrawCycle = 1;
+
+
+		// write back new values into pparams
+		VectorCopy ( v_cl_angles, pparams->cl_viewangles );
+		VectorCopy ( v_angles, pparams->viewangles )
+		VectorCopy ( v_origin, pparams->vieworg );
 	}
 	else
 	{
-		// second renderer cycle, inset window
 
+		// TODO: THis view is 3 pixels off
+		// TODO: THis view is 3 pixels off
+
+		// second renderer cycle, inset window
+		//gEngfuncs.Con_Printf("CAW VIEW == 2\n");
+		gEngfuncs.Con_Printf("ent id FOR pip2 = %d\n", ent->index);
+		//V_GetInEyePos( (int)cl_pip2->value, pparams->simorg, params->cl_viewangles );
+
+		VectorCopy ( ent->origin, pparams->simorg );
+		VectorCopy ( ent->angles, pparams->cl_viewangles );
+
+		V_CalcNormalRefdef ( pparams );
 		// set inset parameters
-		pparams->viewport[0] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowX);	// change viewport to inset window
-		pparams->viewport[1] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowY);
-		pparams->viewport[2] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowWidth);
-		pparams->viewport[3] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowHeight);
-		pparams->nextView	 = 0;	// on further view
+
+		pparams->viewport[0] = XRES(320);	// change viewport to inset window
+		pparams->viewport[1] = YRES(0);
+		pparams->viewport[2] = XRES(320);
+		pparams->viewport[3] = YRES(480);
+
+		pparams->nextView	 = 0;	// no further view
 
 		// override some settings in certain modes
-		switch ( (int)gHUD.m_Spectator.m_pip->value )
+		/*switch ( (int)gHUD.m_Spectator.m_pip->value )
 		{
 			case INSET_CHASE_FREE : V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
-									break;	
+									break;
 
 			case INSET_IN_EYE	 :	V_CalcNormalRefdef ( pparams );
 									break;
@@ -1670,17 +1788,19 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 										V_GetMapChasePosition( g_iUser2, v_cl_angles, v_origin, v_angles );
 
 									break;
-		}
+		}*/
 
-		gHUD.m_Spectator.m_iDrawCycle = 1;
+		gHUD.m_Spectator.m_iDrawCycle = 2;
+
+
+		// write back new values into pparams
+		VectorCopy ( v_cl_angles, pparams->cl_viewangles );
+		VectorCopy ( v_angles, pparams->viewangles )
+		VectorCopy ( v_origin, pparams->vieworg );
 	}
 
-	// write back new values into pparams
-	VectorCopy ( v_cl_angles, pparams->cl_viewangles );
-	VectorCopy ( v_angles, pparams->viewangles )
-	VectorCopy ( v_origin, pparams->vieworg );
-
 }
+
 
 
 
@@ -1777,6 +1897,10 @@ void V_Init (void)
 	cl_viewmodel_ofs_right		= gEngfuncs.pfnRegisterVariable( "cl_viewmodel_ofs_right","0", FCVAR_ARCHIVE ); // x = right
 	cl_viewmodel_ofs_forward	= gEngfuncs.pfnRegisterVariable( "cl_viewmodel_ofs_forward","0", FCVAR_ARCHIVE ); // y = forward
 	cl_viewmodel_ofs_up		    = gEngfuncs.pfnRegisterVariable( "cl_viewmodel_ofs_up","0", FCVAR_ARCHIVE ); // z = up
+
+	cl_pip		    = gEngfuncs.pfnRegisterVariable( "cl_pip", "0", FCVAR_ARCHIVE );
+	cl_splitscreen		    = gEngfuncs.pfnRegisterVariable( "cl_splitscreen", "0", FCVAR_ARCHIVE );
+	cl_pip2		    = gEngfuncs.pfnRegisterVariable( "cl_pip2", "0", FCVAR_ARCHIVE );
 }
 
 

@@ -23,8 +23,11 @@ extern IParticleMan *g_pParticleMan;
 void Game_AddObjects( void );
 
 extern vec3_t v_origin;
+extern cvar_t *cl_pip;
+extern cvar_t *cl_pip2;
 
 int g_iAlive = 1;
+
 
 /*
 ========================
@@ -70,6 +73,24 @@ int CL_DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *m
 		if ( (	g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE ) &&
 				ent->index == g_iUser2 )
 			return 0;	// don't draw the player we are following in eye
+
+		/* TODO: Idea: In order to render the other players inside a split screen view
+		 * we may be able to only update another viewport each second frame (for 2 player ss)
+		 * and on each of those frame we will only hide the 3rd person model
+		 * of the player we are spectating in that viewport.
+		 * TODO: Idea ^ if frames aren't able to apply, try using the gametime instead
+		 * (although that may be even more shite)
+		 * This only really matters for HLDM split screen, HLKReedz doesn't really
+		 * /need/ to render the other player so much
+		 * */
+
+		// TODO: SOUP SS
+		if(ent->index == (int)cl_pip->value)
+			return 0;
+
+		if(ent->index == (int)cl_pip2->value)
+			return 0;
+
 
 	}
 
@@ -166,9 +187,9 @@ void CL_DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const stru
 		g_iPlayerClass = dst->playerclass;
 		g_iTeamNumber = dst->team;
 
-		if (src->iuser1 != 0)
+		if (src->iuser1 != 0 || gEngfuncs.IsSpectateOnly() )
 			discord_integration::set_spectating(true);
-		else if (g_iUser1 != 0)
+		else if (g_iUser1 != 0 && !gEngfuncs.IsSpectateOnly() )
 			discord_integration::set_spectating(false);
 
 		g_iUser1 = src->iuser1;
