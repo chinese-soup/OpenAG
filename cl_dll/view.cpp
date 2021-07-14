@@ -1717,15 +1717,15 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 
 		VectorCopy ( ent->origin, pparams->simorg );
 		VectorCopy ( ent->angles, pparams->cl_viewangles );
-		//V_GetInEyePos( (int)cl_pip->value, pparams->simorg, pparams->cl_viewangles ); // TODO: NOT USE
+		V_GetInEyePos( (int)cl_pip->value, pparams->simorg, pparams->cl_viewangles ); // TODO: NOT USE
 		V_CalcNormalRefdef ( pparams );
 
 		pparams->viewport[0] = XRES(0);	// change viewport to inset window
 		pparams->viewport[1] = YRES(0);
-		//pparams->viewport[2] = XRES(640);
-		//pparams->viewport[2] = XRES(320);
 		pparams->viewport[2] = XRES(320); // TODO: ss
 		pparams->viewport[3] = YRES(480);
+
+		//pparams->viewport[2] = XRES(640);
 		/*pparams->viewport[0] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowX);	// change viewport to inset window
 		pparams->viewport[1] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowY);
 		pparams->viewport[2] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowWidth);
@@ -1752,10 +1752,10 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 		// second renderer cycle, inset window
 		//gEngfuncs.Con_Printf("CAW VIEW == 2\n");
 		gEngfuncs.Con_Printf("ent id FOR pip2 = %d\n", ent->index);
-		//V_GetInEyePos( (int)cl_pip2->value, pparams->simorg, params->cl_viewangles );
 
 		VectorCopy ( ent->origin, pparams->simorg );
 		VectorCopy ( ent->angles, pparams->cl_viewangles );
+		V_GetInEyePos( (int)cl_pip2->value, pparams->simorg, pparams->cl_viewangles );
 
 		V_CalcNormalRefdef ( pparams );
 		// set inset parameters

@@ -345,7 +345,14 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 		//}
 		//else
 		//	m_TopBanner->setVisible( false );
-		
+
+		//gViewPort->m_pSpectatorPanel->
+		m_BottomMainLabel->setPos(XRES(48), YRES(6));
+
+		/*new DropDownButton("Spectator Bottom",
+		                                        XRES(MAIN_LABEL_X), YRES(6), XRES(MAIN_LABEL_WIDTH), YRES(20),
+		                                        false, false );*/
+
 		m_InsetViewButton->setBounds(	XRES( x -1 ), YRES( y ), 
 										XRES( wide +2), YRES( tall ) );
 		//m_InsetViewButton->setVisible(true);
