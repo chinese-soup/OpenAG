@@ -79,6 +79,7 @@ public:
 	DropDownButton	*m_BottomMainButton;
 	//CImageLabel		*m_TimerImage;
 	Label			*m_BottomMainLabel;
+	Label			*m_BottomMainLabelSecondPlayer;
 	CTransparentPanel *m_BottomMainLabelBackground;
 	//Label			*m_CurrentTime;
 	//Label			*m_ExtraInfo;

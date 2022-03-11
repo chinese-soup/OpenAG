@@ -218,6 +218,16 @@ void SpectatorPanel::Initialize()
 	m_BottomMainLabel->setContentAlignment( vgui::Label::a_center );
 	m_BottomMainLabel->setBorder( NULL );
 	m_BottomMainLabel->setVisible(false);
+
+	m_BottomMainLabelSecondPlayer = new Label("Spectator TWO",
+		XRES(MAIN_LABEL_X), YRES(6), XRES(MAIN_LABEL_WIDTH), YRES(20));
+
+	m_BottomMainLabelSecondPlayer->setParent(m_BottomBorder);
+	m_BottomMainLabelSecondPlayer->setPaintBackgroundEnabled(false);
+	m_BottomMainLabelSecondPlayer->setFgColor( Scheme::sc_primary1 );
+	m_BottomMainLabelSecondPlayer->setContentAlignment( vgui::Label::a_center );
+	m_BottomMainLabelSecondPlayer->setBorder( NULL );
+	m_BottomMainLabelSecondPlayer->setVisible(false);
 	
 	m_InsetViewButton = new ColorButton("", XRES(2), YRES(2), XRES(240), YRES(180), false, false );
 	m_InsetViewButton->setParent( this );
@@ -255,10 +265,12 @@ void SpectatorPanel::ShowMenu(bool isVisible)
 	{
 		//int iLabelSizeX, iLabelSizeY;
 		m_BottomMainLabel->setVisible(true);
+		m_BottomMainLabelSecondPlayer->setVisible(true);
+
 		m_BottomMainLabelBackground->setVisible(true);
 		m_BottomMainButton->setVisible(false);
 
-		//m_BottomMainLabel->getSize( iLabelSizeX, iLabelSizeY );
+			//m_BottomMainLabel->getSize( iLabelSizeX, iLabelSizeY );
 		//m_BottomMainLabel->setPos( ( ScreenWidth / 2 ) - (iLabelSizeX/2), YRES(6) );
 
 		m_BottomBorder->setTransparency(255);
@@ -267,6 +279,7 @@ void SpectatorPanel::ShowMenu(bool isVisible)
 	{
 		//m_BottomMainButton->setPos( XRES( ( 15 + OPTIONS_BUTTON_X + 15 ) + 31 ), YRES(6) );
 		m_BottomMainLabel->setVisible(false);
+		m_BottomMainLabelSecondPlayer->setVisible(false);
 		m_BottomMainLabelBackground->setVisible(false);
 		m_BottomMainButton->setVisible(true);
 
@@ -349,6 +362,9 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 		//gViewPort->m_pSpectatorPanel->
 		m_BottomMainLabel->setPos(XRES(48), YRES(6));
 
+		m_BottomMainLabelSecondPlayer->setVisible(true);
+		m_BottomMainLabelSecondPlayer->setPos(XRES(592), YRES(6));
+
 		/*new DropDownButton("Spectator Bottom",
 		                                        XRES(MAIN_LABEL_X), YRES(6), XRES(MAIN_LABEL_WIDTH), YRES(20),
 		                                        false, false );*/
@@ -370,7 +386,8 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 		//	m_TopBanner->setVisible( false );
 
 		//m_TopBorder->setBounds( 0, 0, ScreenWidth, PANEL_HEIGHT );
-						
+
+		m_BottomMainLabelSecondPlayer->setVisible(false);
 		m_InsetViewButton->setVisible(false);
 	}
 

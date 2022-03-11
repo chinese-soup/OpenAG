@@ -87,6 +87,9 @@ extern float * GetClientColor( int clientIndex );
 
 using namespace vgui;
 
+extern cvar_t *cl_pip;
+extern cvar_t *cl_pip2;
+
 // Team Colors
 int iNumberOfTeamColors = 5;
 int iTeamColors[5][3] =
@@ -1564,6 +1567,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		char helpString2[128];
 		// char tempString[128];
 		char * name;
+		char * name_secondplayer;
 		char *pBottomText = NULL;
 		int player = 0;
 
@@ -1593,6 +1597,11 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 			player = g_iUser2;
 		}
 
+		if (g_iUser1 && gHUD.m_Spectator.m_pip)
+			name_secondplayer = g_PlayerInfoList[(int)cl_pip->value].name;
+		else
+			name_secondplayer = NULL;
+
 		// special case in free map and inset off, don't show names
 		if ( (g_iUser1 == OBS_MAP_FREE) && !gHUD.m_Spectator.m_pip->value )
 			name = NULL;
@@ -1610,6 +1619,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		{
 			pBottomText = CHudTextMessage::BufferedLocaliseTextString( bottomText );
 		}
+
 
 		// in first person mode colorize player names
 		if ( (g_iUser1 == OBS_IN_EYE) && player )
@@ -1640,7 +1650,9 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		m_pSpectatorPanel->m_BottomMainLabel->setText( "%s", pBottomText );
 		m_pSpectatorPanel->m_BottomMainButton->setText( pBottomText );
 
-		
+		m_pSpectatorPanel->m_BottomMainLabelSecondPlayer->setText( "%s", name_secondplayer );
+		//m_pSpectatorPanel->m_BottomMainButton->setText( pBottomText );
+
 		// update extra info field
 		char szText[64];
 
